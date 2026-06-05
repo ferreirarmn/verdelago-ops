@@ -1,0 +1,351 @@
+{
+  "gerado": "2026-06-03",
+  "updates": [
+    {
+      "PessoaID": "P043",
+      "Nome": "Daniel Almeida",
+      "campos": {
+        "EmpresaAgencia": "Verdelago",
+        "Vinculo": "Sazonal"
+      }
+    },
+    {
+      "PessoaID": "P193",
+      "Nome": "Renato Guerreiro",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P147",
+      "Nome": "Marcus",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P150",
+      "Nome": "Maria Inês",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P242",
+      "Nome": "Wilia",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P067",
+      "Nome": "Fernanda Melo",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P089",
+      "Nome": "Igor Oliveira",
+      "campos": {
+        "Vinculo": "TT",
+        "Estado": "Inativo"
+      }
+    },
+    {
+      "PessoaID": "P069",
+      "Nome": "Filipe Tavares",
+      "campos": {
+        "Vinculo": "TT",
+        "Estado": "Inativo"
+      }
+    },
+    {
+      "PessoaID": "P035",
+      "Nome": "Cecilia Miguel",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P048",
+      "Nome": "Deepack Kumar",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P066",
+      "Nome": "Fabiana Nascimento",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P004",
+      "Nome": "Abulai Dabo",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P060",
+      "Nome": "Elizabeth",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P174",
+      "Nome": "Nitin",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P139",
+      "Nome": "Mamadou",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P020",
+      "Nome": "Assana Baldé",
+      "campos": {
+        "Vinculo": "TT",
+        "Estado": "Inativo"
+      }
+    },
+    {
+      "PessoaID": "P099",
+      "Nome": "Janet",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P012",
+      "Nome": "Ana Damião",
+      "campos": {
+        "EmpresaAgencia": "Talenter",
+        "Vinculo": "TT",
+        "Estado": "Ativo"
+      }
+    },
+    {
+      "PessoaID": "P181",
+      "Nome": "Patricia Castro",
+      "campos": {
+        "Vinculo": "TT",
+        "Estado": "Ativo"
+      }
+    },
+    {
+      "PessoaID": "P028",
+      "Nome": "Brajham",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P131",
+      "Nome": "Liaza",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P158",
+      "Nome": "Md Rahamt",
+      "campos": {
+        "Vinculo": "TT",
+        "Estado": "Inativo"
+      }
+    },
+    {
+      "PessoaID": "P196",
+      "Nome": "Rita Santos",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P224",
+      "Nome": "Tiago Barros",
+      "campos": {
+        "Vinculo": "TT",
+        "Estado": "Ativo"
+      }
+    },
+    {
+      "PessoaID": "P156",
+      "Nome": "Maximiliano Ramos",
+      "campos": {
+        "Vinculo": "TT",
+        "Estado": "Ativo"
+      }
+    },
+    {
+      "PessoaID": "P169",
+      "Nome": "Nandhitha",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P013",
+      "Nome": "Ana Eloisa",
+      "campos": {
+        "Vinculo": "TT",
+        "Estado": "Inativo"
+      }
+    },
+    {
+      "PessoaID": "P117",
+      "Nome": "João Sozinho",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P209",
+      "Nome": "Rui Vasco",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P072",
+      "Nome": "Gabriel Machado",
+      "campos": {
+        "Vinculo": "TT",
+        "Estado": "Inativo"
+      }
+    },
+    {
+      "PessoaID": "P236",
+      "Nome": "Victoria Correia",
+      "campos": {
+        "Vinculo": "TT",
+        "Estado": "Inativo"
+      }
+    },
+    {
+      "PessoaID": "P052",
+      "Nome": "Diogo Graça",
+      "campos": {
+        "Vinculo": "Quadro"
+      }
+    },
+    {
+      "PessoaID": "P127",
+      "Nome": "Leonardo Silva",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P125",
+      "Nome": "Leonardo Pereira",
+      "campos": {
+        "Vinculo": "TT"
+      }
+    },
+    {
+      "PessoaID": "P036",
+      "Nome": "Celso Leite",
+      "campos": {
+        "EmpresaAgencia": "SW",
+        "Vinculo": "TT",
+        "Estado": "Ativo"
+      }
+    },
+    {
+      "PessoaID": "P018",
+      "Nome": "André Preira",
+      "campos": {
+        "EmpresaAgencia": "Talenter",
+        "Vinculo": "TT",
+        "Estado": "Ativo"
+      }
+    },
+    {
+      "PessoaID": "P126",
+      "Nome": "Leonardo Piostiri",
+      "campos": {
+        "EmpresaAgencia": "Verdelago",
+        "Vinculo": "Quadro",
+        "Estado": "Inativo"
+      }
+    }
+  ],
+  "creates": [
+    {
+      "Nome": "Rúben Pires",
+      "FuncaoID": "F13",
+      "FuncaoNome": "Cozinha",
+      "FuncaoTexto": "Cozinheiro de 1ª",
+      "EmpresaAgencia": "Verdelago",
+      "Vinculo": "Quadro",
+      "Estado": "Ativo",
+      "Modulo": "F&B",
+      "match_funcao": "aprox"
+    },
+    {
+      "Nome": "Ranjit Tamang",
+      "FuncaoID": "",
+      "FuncaoNome": "",
+      "FuncaoTexto": "Copeiro",
+      "EmpresaAgencia": "Timing",
+      "Vinculo": "TT",
+      "Estado": "Ativo",
+      "Modulo": "F&B",
+      "match_funcao": "sem-match"
+    },
+    {
+      "Nome": "Talitha Marinho",
+      "FuncaoID": "F27",
+      "FuncaoNome": "Governanta",
+      "FuncaoTexto": "Governanta",
+      "EmpresaAgencia": "Talenter",
+      "Vinculo": "",
+      "Estado": "Ativo",
+      "Modulo": "HSK",
+      "match_funcao": "exato"
+    },
+    {
+      "Nome": "Poliana",
+      "FuncaoID": "F50",
+      "FuncaoNome": "Turndown",
+      "FuncaoTexto": "Turndown",
+      "EmpresaAgencia": "Timing",
+      "Vinculo": "",
+      "Estado": "Ativo",
+      "Modulo": "HSK",
+      "match_funcao": "exato"
+    },
+    {
+      "Nome": "Amália Manuel",
+      "FuncaoID": "F21",
+      "FuncaoNome": "Empregada de Andares",
+      "FuncaoTexto": "Andares",
+      "EmpresaAgencia": "Talenter",
+      "Vinculo": "",
+      "Estado": "Ativo",
+      "Modulo": "HSK",
+      "match_funcao": "exato"
+    },
+    {
+      "Nome": "Rabi Kumar",
+      "FuncaoID": "F52",
+      "FuncaoNome": "Valete",
+      "FuncaoTexto": "Valete",
+      "EmpresaAgencia": "Timing",
+      "Vinculo": "",
+      "Estado": "Ativo",
+      "Modulo": "HSK",
+      "match_funcao": "exato"
+    }
+  ]
+}
