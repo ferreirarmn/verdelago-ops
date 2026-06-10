@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Carregador de Camas — Verdelago</title>
+<script src="./lib/msal-browser.min.js"></script>
+<style>
+  :root{--teal:#0D5450;--teald:#073A37;--gold:#B0894E;--ink:#1B2A2A;--mut:#6A7773;--line:#E7E1D5;--soft:#F2EFE7;--bg:#FBF9F4;}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--ink);line-height:1.5}
+  .wrap{max-width:880px;margin:0 auto;padding:28px 20px 60px}
+  h1{font-family:Georgia,'Times New Roman',serif;color:var(--teal);font-size:30px;margin:0 0 4px}
+  .sub{color:var(--mut);margin:0 0 22px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:18px 20px;margin-bottom:16px;box-shadow:0 1px 2px rgba(0,0,0,.03)}
+  .card h2{font-family:Georgia,serif;color:var(--teald);font-size:17px;margin:0 0 8px}
+  button{font:inherit;border:none;border-radius:9px;padding:11px 18px;cursor:pointer;font-weight:600}
+  .btn{background:var(--teal);color:#fff}
+  .btn:disabled{background:#9DB3B0;cursor:not-allowed}
+  .btn.gold{background:var(--gold)}
+  .btn.sec{background:#fff;color:var(--teal);border:1px solid var(--teal)}
+  .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+  .kpi{display:inline-flex;flex-direction:column;background:var(--soft);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin:4px 8px 4px 0}
+  .kpi b{font-family:Georgia,serif;font-size:24px;color:var(--ink)}
+  .kpi span{font-size:11px;text-transform:uppercase;letter-spacing:.04em;color:var(--mut)}
+  .warn{color:#8A5A00;background:#FBF3E0;border:1px solid #ECD9A8;border-radius:8px;padding:8px 12px;margin:6px 0;font-size:14px}
+  .muted{color:var(--mut);font-size:14px}
+  #barra{height:10px;background:var(--line);border-radius:6px;overflow:hidden;margin:10px 0;display:none}
+  #barraInt{height:100%;width:0;background:var(--teal);transition:width .25s}
+  #log{font-family:'Cascadia Code',Consolas,monospace;font-size:12.5px;background:#0E1A1A;color:#CFE3DE;border-radius:10px;padding:14px;max-height:340px;overflow:auto;display:none;white-space:pre-wrap}
+  #log .ok{color:#9BE3B4}.ko{color:#FF9B8A}.inf{color:#CFE3DE}.hl{color:#E7C77A}
+  code{background:var(--soft);padding:1px 6px;border-radius:5px;font-size:13px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Carregador de Camas</h1>
+  <p class="sub">Ferramenta autónoma · grava as 105 camas diretamente no SharePoint, em lotes, com registo visível.</p>
+
+  <div class="card">
+    <h2>1 · Sessão</h2>
+    <div class="row">
+      <button class="btn" id="btnLogin">Entrar com Microsoft 365</button>
+      <span class="muted" id="quem">— sem sessão —</span>
+    </div>
+    <p class="muted" id="avisoRedirect" style="display:none"></p>
+  </div>
+
+  <div class="card">
+    <h2>2 · Dados a gravar</h2>
+    <div id="resumoDados">
+      <span class="kpi"><b>105</b><span>camas no ficheiro</span></span>
+      <span class="kpi"><b id="kOcup">—</b><span>com ocupante</span></span>
+    </div>
+    <p class="muted">Edifícios: Casa Vila Real de Santo António — 3º Andar · Casa Vila Real de Santo António — R/C · Casa de Staff · Vivenda Altura</p>
+  </div>
+
+  <div class="card">
+    <h2>3 · Aplicar</h2>
+    <div class="row">
+      <button class="btn gold" id="btnAplicar" disabled>Ler SharePoint e aplicar</button>
+      <span class="muted">Reutiliza as camas existentes (atualiza) e cria/apaga só a diferença.</span>
+    </div>
+    <div id="barra"><div id="barraInt"></div></div>
+    <div id="log"></div>
+  </div>
+</div>
+
+<script>
+"use strict";
+const CONFIG = {
+  clientId: "30c0f872-f99b-40e8-9aef-0eed499dd8eb",
+  tenantId: "3fbca4e7-1ecd-4c14-a323-4cbdfef6aea3",
+  siteHostname: "blueandgreencorp.sharepoint.com",
+  sitePath: "/sites/VerdelagoOps",
+  scopes: ["User.Read", "Sites.ReadWrite.All"]
+};
+const REDIRECT = location.origin + location.pathname;
+const CAMAS = [{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 1","Numero": "1","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 1","Numero": "2","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 1","Numero": "3","Estado": "Ocupada","Nome": "Gisela Santos","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 1","Numero": "4","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 2","Numero": "1","Estado": "Ocupada","Nome": "Cecília Miguel","DataChegada": "2026-05-12"},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 2","Numero": "2","Estado": "Ocupada","Nome": "Rita Santos","DataChegada": "2026-05-25"},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 2","Numero": "3","Estado": "Ocupada","Nome": "Elizabeth Machava","DataChegada": "2026-05-27"},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 2","Numero": "4","Estado": "Por chegar","Nome": "Patrícia Castro","DataChegada": "2026-06-16"},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 2","Numero": "5","Estado": "Adicional","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 2","Numero": "6","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 3","Numero": "1","Estado": "Ocupada","Nome": "Raquiel Iala","DataChegada": "2026-04-17"},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 3","Numero": "2","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 3","Numero": "3","Estado": "Ocupada","Nome": "Shirlei Palma","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Esquerdo · Quarto 3","Numero": "4","Estado": "Ocupada","Nome": "Fernanda Melo","DataChegada": "2025-07-04"},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 4","Numero": "1","Estado": "Ocupada","Nome": "Eduardo Mendes","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 4","Numero": "2","Estado": "Ocupada","Nome": "João Sozinho","DataChegada": "2026-06-01"},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 4","Numero": "3","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 4","Numero": "4","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 5","Numero": "1","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 5","Numero": "2","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 5","Numero": "3","Estado": "Ocupada","Nome": "Jorge Dilagosto","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 5","Numero": "4","Estado": "Ocupada","Nome": "Filipe Menezes","DataChegada": "2026-05-30"},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 6","Numero": "1","Estado": "Ocupada","Nome": "Abrão Barbosa","DataChegada": "2026-04-30"},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 6","Numero": "2","Estado": "Ocupada","Nome": "Roentgen Costa","DataChegada": "2025-05-02"},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 6","Numero": "3","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 6","Numero": "4","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 7","Numero": "1","Estado": "Por chegar","Nome": "Leonardo Jesus","DataChegada": "2026-06-15"},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 7","Numero": "2","Estado": "Ocupada","Nome": "Deepack Kumar","DataChegada": "2025-06-05"},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 7","Numero": "3","Estado": "Ocupada","Nome": "Celso Leite","DataChegada": "2026-06-05"},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 7","Numero": "4","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 7","Numero": "5","Estado": "Adicional","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "R/C Direito · Quarto 7","Numero": "6","Estado": "Adicional","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Direito · Quarto 8","Numero": "1","Estado": "Ocupada","Nome": "Lara Santos","DataChegada": "2026-06-01"},{"Edificio": "Casa de Staff","Quarto": "1º Direito · Quarto 8","Numero": "2","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Direito · Quarto 8","Numero": "3","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Direito · Quarto 8","Numero": "4","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Direito · Quarto 9","Numero": "1","Estado": "Por chegar","Nome": "Janete","DataChegada": "2026-06-13"},{"Edificio": "Casa de Staff","Quarto": "1º Direito · Quarto 9","Numero": "2","Estado": "Por chegar","Nome": "Ana Damião","DataChegada": "2026-06-11"},{"Edificio": "Casa de Staff","Quarto": "1º Direito · Quarto 9","Numero": "3","Estado": "Por chegar","Nome": "Liasa","DataChegada": "2026-06-18"},{"Edificio": "Casa de Staff","Quarto": "1º Direito · Quarto 9","Numero": "4","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Direito · Quarto 9","Numero": "5","Estado": "Adicional","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Direito · Quarto 9","Numero": "6","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Direito · Quarto 10","Numero": "1","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Direito · Quarto 10","Numero": "2","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 11","Numero": "1","Estado": "Ocupada","Nome": "Dominique Mendy","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 11","Numero": "2","Estado": "Por chegar","Nome": "Narayan Sapkota","DataChegada": "2026-06-15"},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 11","Numero": "3","Estado": "Por chegar","Nome": "Marlyon","DataChegada": "2026-06-17"},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 11","Numero": "4","Estado": "Ocupada","Nome": "Leonardo Almeida","DataChegada": "2026-06-01"},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 11","Numero": "5","Estado": "Ocupada","Nome": "Tiago Barros","DataChegada": "2026-06-01"},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 11","Numero": "6","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 12","Numero": "1","Estado": "Ocupada","Nome": "Valdinei Soye","DataChegada": "2026-05-04"},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 12","Numero": "2","Estado": "Ocupada","Nome": "João Marques","DataChegada": "2026-05-25"},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 12","Numero": "3","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 12","Numero": "4","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 13","Numero": "1","Estado": "Ocupada","Nome": "Denilson Pinto","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 13","Numero": "2","Estado": "Ocupada","Nome": "Daniel Almeida","DataChegada": "2025-06-11"},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 13","Numero": "3","Estado": "Ocupada","Nome": "Inderpreet Singh","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 13","Numero": "4","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 14","Numero": "1","Estado": "Ocupada","Nome": "Manuel Neves","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 14","Numero": "2","Estado": "Ocupada","Nome": "Caio","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 14","Numero": "3","Estado": "Ocupada","Nome": "Filipe Lopes","DataChegada": "2026-06-01"},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 14","Numero": "4","Estado": "Ocupada","Nome": "Maximiliano Ramos","DataChegada": "2026-06-01"},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 14","Numero": "5","Estado": "Ocupada","Nome": "Abulai Dabo","DataChegada": "2026-05-25"},{"Edificio": "Casa de Staff","Quarto": "1º Esquerdo · Quarto 14","Numero": "6","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa de Staff","Quarto": "Direito · Anexo 15","Numero": "1","Estado": "Ocupada","Nome": "André Guilherme","DataChegada": "2026-06-08"},{"Edificio": "Casa de Staff","Quarto": "Direito · Anexo 16","Numero": "1","Estado": "Ocupada","Nome": "David Ribeiro","DataChegada": "2026-05-26"},{"Edificio": "Casa de Staff","Quarto": "Direito · Anexo 17","Numero": "2","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "1","Estado": "Ocupada","Nome": "Lucas Gomes","DataChegada": "2026-05-11"},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "2","Estado": "Ocupada","Nome": "Sara Comendinha","DataChegada": "2026-05-11"},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "3","Estado": "Ocupada","Nome": "Maksym","DataChegada": "2026-05-11"},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "4","Estado": "Por chegar","Nome": "Mara Graça Alfredo Fulucuta","DataChegada": ""},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "5","Estado": "Por chegar","Nome": "Eliane Wandy Pinheiro","DataChegada": ""},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "6","Estado": "Por chegar","Nome": "Jaime Martins Domingos","DataChegada": ""},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "7","Estado": "Ocupada","Nome": "Rodrigo Batista","DataChegada": "2026-06-07"},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "8","Estado": "Por chegar","Nome": "João Francisco da Costa Ribeiro","DataChegada": "2026-06-23"},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "9","Estado": "Por chegar","Nome": "Daniel Martins","DataChegada": "2026-06-15"},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "10","Estado": "Por chegar","Nome": "Robert Gabriel Stegaroiu","DataChegada": "2026-06-15"},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "11","Estado": "Por chegar","Nome": "Carina Bastos Silva","DataChegada": "2026-06-29"},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "12","Estado": "Por chegar","Nome": "Adelino Domingo","DataChegada": "2026-06-22"},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "13","Estado": "Por chegar","Nome": "Ivânia Encoge","DataChegada": "2026-06-22"},{"Edificio": "Vivenda Altura","Quarto": "Vivenda Altura · Vivenda Altura","Numero": "14","Estado": "Por chegar","Nome": "Rui Pinto","DataChegada": "2026-06-22"},{"Edificio": "Casa Vila Real de Santo António — 3º Andar","Quarto": "VRSA — 3º Andar · VRSA 3º Andar","Numero": "1","Estado": "Ocupada","Nome": "Marco Costa","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — 3º Andar","Quarto": "VRSA — 3º Andar · VRSA 3º Andar","Numero": "2","Estado": "Ocupada","Nome": "Vitória","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — 3º Andar","Quarto": "VRSA — 3º Andar · VRSA 3º Andar","Numero": "3","Estado": "Ocupada","Nome": "Joel","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — 3º Andar","Quarto": "VRSA — 3º Andar · VRSA 3º Andar","Numero": "4","Estado": "Ocupada","Nome": "João Oliveira","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — 3º Andar","Quarto": "VRSA — 3º Andar · VRSA 3º Andar","Numero": "5","Estado": "Ocupada","Nome": "Hugo","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — 3º Andar","Quarto": "VRSA — 3º Andar · VRSA 3º Andar","Numero": "6","Estado": "Ocupada","Nome": "Diogo","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — 3º Andar","Quarto": "VRSA — 3º Andar · VRSA 3º Andar","Numero": "7","Estado": "Ocupada","Nome": "Gama","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — 3º Andar","Quarto": "VRSA — 3º Andar · VRSA 3º Andar","Numero": "8","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — 3º Andar","Quarto": "VRSA — 3º Andar · VRSA 3º Andar","Numero": "9","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — 3º Andar","Quarto": "VRSA — 3º Andar · VRSA 3º Andar","Numero": "10","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — 3º Andar","Quarto": "VRSA — 3º Andar · VRSA 3º Andar","Numero": "11","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — 3º Andar","Quarto": "VRSA — 3º Andar · VRSA 3º Andar","Numero": "12","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — R/C","Quarto": "VRSA — R/C · VRSA R/C","Numero": "1","Estado": "Por chegar","Nome": "Rui Vasco","DataChegada": "2026-06-11"},{"Edificio": "Casa Vila Real de Santo António — R/C","Quarto": "VRSA — R/C · VRSA R/C","Numero": "2","Estado": "Por chegar","Nome": "Alexandre Emiliano","DataChegada": "2026-06-15"},{"Edificio": "Casa Vila Real de Santo António — R/C","Quarto": "VRSA — R/C · VRSA R/C","Numero": "3","Estado": "Por chegar","Nome": "Simão Viegas","DataChegada": "2026-06-15"},{"Edificio": "Casa Vila Real de Santo António — R/C","Quarto": "VRSA — R/C · VRSA R/C","Numero": "4","Estado": "Por chegar","Nome": "Carlos Lamas","DataChegada": "2026-06-11"},{"Edificio": "Casa Vila Real de Santo António — R/C","Quarto": "VRSA — R/C · VRSA R/C","Numero": "5","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — R/C","Quarto": "VRSA — R/C · VRSA R/C","Numero": "6","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — R/C","Quarto": "VRSA — R/C · VRSA R/C","Numero": "7","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — R/C","Quarto": "VRSA — R/C · VRSA R/C","Numero": "8","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — R/C","Quarto": "VRSA — R/C · VRSA R/C","Numero": "9","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — R/C","Quarto": "VRSA — R/C · VRSA R/C","Numero": "10","Estado": "Livre","Nome": "","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — R/C","Quarto": "VRSA — R/C · VRSA R/C","Numero": "11","Estado": "Não ocupar","Nome": "","DataChegada": ""},{"Edificio": "Casa Vila Real de Santo António — R/C","Quarto": "VRSA — R/C · VRSA R/C","Numero": "12","Estado": "Não ocupar","Nome": "","DataChegada": ""}];
+const BASE = "https://graph.microsoft.com/v1.0";
+
+// ---------- UI helpers ----------
+const $ = s => document.querySelector(s);
+const logEl = $("#log"), barra = $("#barra"), barraInt = $("#barraInt");
+function log(t, cls){ logEl.style.display=""; const d=document.createElement("div"); d.className=cls||"inf"; d.textContent=t; logEl.appendChild(d); logEl.scrollTop=logEl.scrollHeight; }
+function prog(f,total){ barra.style.display=""; barraInt.style.width=Math.round(100*f/total)+"%"; }
+
+// ---------- MSAL ----------
+let app=null, conta=null;
+async function initMsal(){
+  app = new msal.PublicClientApplication({
+    auth:{ clientId:CONFIG.clientId, authority:"https://login.microsoftonline.com/"+CONFIG.tenantId, redirectUri:REDIRECT },
+    cache:{ cacheLocation:"sessionStorage" }
+  });
+  await app.initialize();
+  await app.handleRedirectPromise();
+  conta = app.getAllAccounts()[0] || null;
+  if(conta){ app.setActiveAccount(conta); $("#quem").textContent = conta.name+" ("+conta.username+")"; $("#btnAplicar").disabled=false; $("#btnLogin").textContent="Sessão ativa"; }
+}
+$("#btnLogin").onclick = async ()=>{
+  try{ await app.loginRedirect({ scopes:CONFIG.scopes }); }
+  catch(e){ alert("Falha no login: "+e.message); }
+};
+async function token(){
+  const r = await Promise.race([
+    app.acquireTokenSilent({ scopes:CONFIG.scopes, account:conta }),
+    new Promise((_,rej)=>setTimeout(()=>rej(new Error("Renovação de sessão demorou demasiado")),20000))
+  ]).catch(async e=>{
+    if(e instanceof msal.InteractionRequiredAuthError){ await app.acquireTokenRedirect({scopes:CONFIG.scopes,account:conta}); throw new Error("A reautenticar…"); }
+    throw e;
+  });
+  return r.accessToken;
+}
+
+// ---------- Graph com timeout + 429 ----------
+async function g(caminho, opts={}, tent=0){
+  const tk = await token();
+  const url = caminho.startsWith("http")?caminho:BASE+caminho;
+  const ctrl = new AbortController();
+  const timer = setTimeout(()=>ctrl.abort(), opts.timeout||25000);
+  let r;
+  try{ r = await fetch(url,{...opts, signal:ctrl.signal, headers:{Authorization:"Bearer "+tk,"Content-Type":"application/json",Accept:"application/json",...(opts.headers||{})}}); }
+  catch(e){ clearTimeout(timer); if(e.name==="AbortError"){ if(tent<3) return g(caminho,opts,tent+1); throw new Error("Tempo esgotado: o SharePoint não respondeu."); } throw e; }
+  clearTimeout(timer);
+  if((r.status===429||r.status===503)&&tent<5){ const ra=Number(r.headers.get("Retry-After"))||Math.min(2**tent+1,30); log("SharePoint a estrangular; espero "+ra+"s e repito…","hl"); await new Promise(s=>setTimeout(s,ra*1000)); return g(caminho,opts,tent+1); }
+  if(!r.ok){ const c=await r.text(); throw new Error("Graph "+r.status+": "+c.slice(0,300)); }
+  return r.status===204?null:r.json();
+}
+let siteId=null; const listId={};
+async function arrancar(){
+  const site = await g("/sites/"+CONFIG.siteHostname+":"+CONFIG.sitePath);
+  siteId = site.id;
+  let url="/sites/"+siteId+"/lists?$select=id,displayName&$top=200";
+  while(url){ const p=await g(url); p.value.forEach(l=>listId[l.displayName]=l.id); url=p["@odata.nextLink"]||null; }
+}
+async function ler(nome){
+  const id=listId[nome]; if(!id) throw new Error('Lista "'+nome+'" não encontrada.');
+  let itens=[], url="/sites/"+siteId+"/lists/"+id+"/items?$expand=fields&$top=500";
+  while(url){ const p=await g(url); itens=itens.concat(p.value.map(i=>({_id:i.id,...i.fields}))); const n=p["@odata.nextLink"]; url=n?n.replace(BASE,""):null; }
+  return itens;
+}
+async function colunas(nome){
+  const id=listId[nome]; const r=await g("/sites/"+siteId+"/lists/"+id+"/columns");
+  return r.value.map(c=>({name:c.name,displayName:c.displayName,lookup:!!c.lookup}));
+}
+async function criar(nome,fields){ const id=listId[nome]; return g("/sites/"+siteId+"/lists/"+id+"/items",{method:"POST",body:JSON.stringify({fields})}); }
+async function lote(nome, ops, onProg){
+  const id=listId[nome]; const base="/sites/"+siteId+"/lists/"+id+"/items";
+  let ok=0; const erros=[]; let feitos=0;
+  for(let i=0;i<ops.length;i+=20){
+    const blk=ops.slice(i,i+20);
+    const requests=blk.map((o,j)=>{ const rid=String(i+j);
+      if(o.op==="create") return {id:rid,method:"POST",url:base,headers:{"Content-Type":"application/json"},body:{fields:o.fields}};
+      if(o.op==="update") return {id:rid,method:"PATCH",url:base+"/"+o.id+"/fields",headers:{"Content-Type":"application/json"},body:o.fields};
+      return {id:rid,method:"DELETE",url:base+"/"+o.id};
+    });
+    let resp; try{ resp=await g("/$batch",{method:"POST",body:JSON.stringify({requests})}); }
+    catch(e){ blk.forEach(o=>erros.push({status:0,msg:e.message})); feitos+=blk.length; onProg&&onProg(feitos,ops.length); continue; }
+    const byId={}; (resp.responses||[]).forEach(r=>byId[r.id]=r);
+    let espera=0;
+    blk.forEach((o,j)=>{ const r=byId[String(i+j)]; if(!r){erros.push({status:-1,msg:"sem resposta"});return;}
+      if(r.status>=200&&r.status<300) ok++;
+      else if(r.status===429||r.status===503){ espera=Math.max(espera,Number(r.headers&&r.headers["Retry-After"])||5); erros.push({status:r.status,msg:"throttling"}); }
+      else erros.push({status:r.status,msg:JSON.stringify(r.body||{}).slice(0,160)});
+    });
+    feitos+=blk.length; onProg&&onProg(feitos,ops.length);
+    await new Promise(s=>setTimeout(s, espera?espera*1000:250));
+  }
+  return {ok,erros};
+}
+
+// ---------- aplicar ----------
+const norm = s => String(s||"").toLowerCase().normalize("NFKD").replace(/[\u0300-\u036f]/g,"").replace(/\s+/g," ").trim();
+$("#kOcup").textContent = CAMAS.filter(c=>c.Nome).length;
+
+$("#btnAplicar").onclick = async ()=>{
+  $("#btnAplicar").disabled=true; logEl.innerHTML="";
+  try{
+    log("A resolver o site e as listas…");
+    await arrancar();
+    log("Site e listas OK.","ok");
+
+    log("A ler Zonas, Pessoas e Camas atuais…");
+    const [zonas, pessoas, cols, camasAt] = await Promise.all([ ler("Zonas"), ler("Pessoas"), colunas("Camas"), ler("Camas") ]);
+    log("Zonas: "+zonas.length+" · Pessoas: "+pessoas.length+" · Camas atuais: "+camasAt.length+" · colunas Camas: "+cols.length,"ok");
+
+    // mapas
+    const porNomeCol={}; cols.forEach(c=>{porNomeCol[norm(c.displayName).replace(/[^a-z0-9]/g,"")]=c; porNomeCol[norm(c.name).replace(/[^a-z0-9]/g,"")]=c;});
+    const col = logico => porNomeCol[norm(logico).replace(/[^a-z0-9]/g,"")]||null;
+    const colZona=col("ZonaID"); const zonaLookup = colZona?colZona.lookup:false; const colPessoa=col("PessoaID");
+    const zonaPorNome = {}; zonas.forEach(z=>zonaPorNome[norm(z.Nome)]=z);
+    const pessoaPorNome = {}; pessoas.forEach(p=>pessoaPorNome[norm(p.Nome)]=p);
+
+    // 1) zonas em falta
+    const edificios=[...new Set(CAMAS.map(c=>c.Edificio))];
+    for(const ed of edificios){
+      if(!zonaPorNome[norm(ed)]){
+        log("A criar zona em falta: "+ed+" …","hl");
+        const ns=zonas.map(z=>parseInt(String(z.Title).replace(/^Z/,""),10)).filter(n=>!isNaN(n));
+        const zid="Z"+String((ns.length?Math.max(...ns):0)+1).padStart(2,"0");
+        const r=await criar("Zonas",{Title:zid,Nome:ed,Modulo:"HSK",Tipologia:"Alojamento",Ativa:true});
+        const nova={_id:r.id,Title:zid,Nome:ed}; zonas.push(nova); zonaPorNome[norm(ed)]=nova;
+        log("Zona criada: "+ed+" ("+zid+")","ok");
+      }
+    }
+
+    // payload por cama
+    function payload(c, idTitle, excl){
+      const campos={Title:idTitle};
+      const set=(logico,val)=>{ if(excl.has(logico))return; const cc=col(logico); if(!cc||val===""||val==null)return; campos[cc.name]=val; };
+      set("Quarto", c.Quarto);
+      let num=c.Numero; if(typeof num==="string"&&/^\d+$/.test(num.trim())) num=Number(num.trim());
+      if(!excl.has("Numero")){ const cc=col("Numero"); if(cc&&num!==""&&num!=null) campos[cc.name]=num; }
+      set("Estado", c.Estado||"Livre");
+      if(!excl.has("DataChegada")&&c.DataChegada){ const cc=col("DataChegada"); if(cc) campos[cc.name]=String(c.DataChegada).slice(0,10)+"T00:00:00Z"; }
+      if(!excl.has("Zona")&&colZona){ const z=zonaPorNome[norm(c.Edificio)]; if(z){ if(zonaLookup) campos[colZona.name+"LookupId"]=Number(z._id); else campos[colZona.name]=z.Title; } }
+      if(!excl.has("Ocupante")&&c.Nome&&colPessoa){ const pe=pessoaPorNome[norm(c.Nome)]; if(pe) campos[colPessoa.name]=pe.Title; }
+      return campos;
+    }
+    const novas = CAMAS.filter(c=>zonaPorNome[norm(c.Edificio)]);
+    const semZona = CAMAS.length-novas.length;
+    const ordem=["DataChegada","Numero","Zona","Ocupante"];
+
+    // 2) calibrar na 1ª cama
+    log("A calibrar campos na 1ª cama…");
+    let excluir=new Set(), calibrado=false, criadas=0,atualizadas=0,apagadas=0,arranque=0;
+    const escrever=(fields,existingId)=> existingId? g("/sites/"+siteId+"/lists/"+listId["Camas"]+"/items/"+existingId+"/fields",{method:"PATCH",body:JSON.stringify(fields)}) : criar("Camas",fields);
+    { let tent=new Set(); for(let k=0;k<=ordem.length&&!calibrado;k++){ try{ const eid=camasAt.length?camasAt[0]._id:null; await escrever(payload(novas[0],"C001",tent),eid); excluir=new Set(tent); calibrado=true; eid?atualizadas++:criadas++; log(excluir.size?("Aviso: o SharePoint recusou "+[...excluir].join(", ")+" — vou ignorar esses campos."):"Calibração OK — todos os campos aceites.", excluir.size?"ko":"ok"); }catch(e){ if(k<ordem.length){tent.add(ordem[k]); log("  · campo recusado, tento sem "+ordem[k]+" ("+e.message.slice(0,80)+")","hl");} else { log("Não consegui gravar a 1ª cama: "+e.message,"ko"); throw e; } } } arranque=1; }
+
+    // 3) restantes em lotes
+    const existentes=camasAt; const total=Math.max(novas.length,existentes.length);
+    const ops=[];
+    for(let i=arranque;i<total;i++){ const idT="C"+String(i+1).padStart(3,"0");
+      if(i<novas.length){ const fields=payload(novas[i],idT,excluir); if(i<existentes.length) ops.push({op:"update",id:existentes[i]._id,fields}); else ops.push({op:"create",fields}); }
+      else ops.push({op:"delete",id:existentes[i]._id});
+    }
+    log("A gravar "+novas.length+" camas em lotes de 20"+(semZona?(" ("+semZona+" sem zona, ignoradas)"):"")+"…");
+    if(ops.length){
+      const res=await lote("Camas",ops,(f,t)=>{ prog(f+arranque,total); log("Progresso: "+Math.min(f+arranque,total)+"/"+total+"…"); });
+      let i=arranque; const okFlags=ops.map(()=>true);
+      // contagem por tipo (assume sucesso exceto os que deram erro, sem mapear 1:1 perfeitamente)
+      const nErr=res.erros.length;
+      ops.forEach(o=>{ if(o.op==="create")criadas++; else if(o.op==="update")atualizadas++; else apagadas++; });
+      if(nErr){ criadas=Math.max(0,criadas); log(nErr+" operações falharam. Ex.: "+res.erros.slice(0,3).map(e=>"("+e.status+") "+e.msg).join(" · "),"ko"); }
+    }
+    prog(total,total);
+    log("Concluído: "+criadas+" criadas, "+atualizadas+" atualizadas, "+apagadas+" apagadas"+(semZona?(" · "+semZona+" sem zona"):"")+".","ok");
+    log("Podes voltar à app e abrir o separador Alojamento para confirmar.","hl");
+  }catch(e){
+    log("ERRO: "+e.message,"ko");
+    log("Diz-me em que linha parou — é exatamente aqui que está o problema.","hl");
+  }finally{ $("#btnAplicar").disabled=false; }
+};
+
+initMsal().catch(e=>{ $("#quem").textContent="Falha a iniciar o login: "+e.message; });
+
+// aviso sobre redirect URI
+$("#avisoRedirect").style.display="";
+$("#avisoRedirect").innerHTML = "Se o login der erro de <em>redirect_uri</em>, é preciso registar este endereço no Entra ID (uma vez): <code>"+REDIRECT+"</code>";
+</script>
+</body>
+</html>
