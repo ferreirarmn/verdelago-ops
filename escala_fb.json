@@ -1,0 +1,218 @@
+{
+ "ratios": {
+  "Salicórnia PA": {
+   "FOH Serviço": 20.0,
+   "BOH Cozinha": 20.0,
+   "BOH Copa": 50.0
+  },
+  "Salicórnia Jantar": {
+   "FOH Serviço": 16.0,
+   "BOH Cozinha": 16.0,
+   "BOH Copa": 50.0
+  },
+  "Beach Club Almoço": {
+   "FOH Serviço": 17.0,
+   "BOH Cozinha": 17.0,
+   "BOH Copa": 60.0
+  },
+  "Beach Club Jantar": {
+   "FOH Serviço": 14.0,
+   "BOH Cozinha": 14.0,
+   "BOH Copa": 50.0
+  },
+  "Food Truck": {
+   "FOH Serviço": 25.0,
+   "BOH Cozinha": 25.0
+  }
+ },
+ "covers": {
+  "Salicórnia PA": {
+   "Janeiro": 0,
+   "Fevereiro": 0,
+   "Março": 886,
+   "Abril": 4374,
+   "Maio": 3291,
+   "Junho": 6424,
+   "Julho": 13404,
+   "Agosto": 17553,
+   "Setembro": 6314,
+   "Outubro": 5451,
+   "Novembro": 875,
+   "Dezembro": 0
+  },
+  "Food Truck": {
+   "Janeiro": 0,
+   "Fevereiro": 0,
+   "Março": 0,
+   "Abril": 0,
+   "Maio": 0,
+   "Junho": 396,
+   "Julho": 828,
+   "Agosto": 919,
+   "Setembro": 164,
+   "Outubro": 0,
+   "Novembro": 0,
+   "Dezembro": 0
+  },
+  "Beach Club Almoço": {
+   "Janeiro": 0,
+   "Fevereiro": 0,
+   "Março": 0,
+   "Abril": 1657,
+   "Maio": 3066,
+   "Junho": 2199,
+   "Julho": 3721,
+   "Agosto": 3731,
+   "Setembro": 2396,
+   "Outubro": 616,
+   "Novembro": 581,
+   "Dezembro": 0
+  },
+  "Salicórnia Jantar": {
+   "Janeiro": 0,
+   "Fevereiro": 0,
+   "Março": 592,
+   "Abril": 2283,
+   "Maio": 1053,
+   "Junho": 1787,
+   "Julho": 2991,
+   "Agosto": 3064,
+   "Setembro": 1719,
+   "Outubro": 1429,
+   "Novembro": 244,
+   "Dezembro": 0
+  },
+  "Salicórnia Almoço": {
+   "Janeiro": 0,
+   "Fevereiro": 0,
+   "Março": 2945,
+   "Abril": 981,
+   "Maio": 0,
+   "Junho": 0,
+   "Julho": 0,
+   "Agosto": 0,
+   "Setembro": 0,
+   "Outubro": 0,
+   "Novembro": 0,
+   "Dezembro": 0
+  },
+  "Beach Club Jantar": {
+   "Janeiro": 0,
+   "Fevereiro": 0,
+   "Março": 0,
+   "Abril": 0,
+   "Maio": 0,
+   "Junho": 4451,
+   "Julho": 8476,
+   "Agosto": 10139,
+   "Setembro": 4304,
+   "Outubro": 2350,
+   "Novembro": 0,
+   "Dezembro": 0
+  }
+ },
+ "dias_mes": {
+  "Janeiro": 31,
+  "Fevereiro": 28,
+  "Março": 31,
+  "Abril": 30,
+  "Maio": 31,
+  "Junho": 30,
+  "Julho": 31,
+  "Agosto": 31,
+  "Setembro": 30,
+  "Outubro": 31,
+  "Novembro": 30,
+  "Dezembro": 31
+ },
+ "conv": 1.4,
+ "orcamento": {
+  "Junho": {
+   "FOH": 41.0,
+   "BOH": 38.0,
+   "Ref": 2.0,
+   "Total": 81.0
+  },
+  "Julho": {
+   "FOH": 53.0,
+   "BOH": 54.0,
+   "Ref": 2.0,
+   "Total": 109.0
+  }
+ },
+ "hc_mensal": {
+  "Janeiro": {
+   "foh": 10.0,
+   "boh": 9.0,
+   "ref": 2,
+   "total": 21.0
+  },
+  "Fevereiro": {
+   "foh": 11.0,
+   "boh": 13.5,
+   "ref": 2,
+   "total": 26.5
+  },
+  "Março": {
+   "foh": 20.0,
+   "boh": 20.5,
+   "ref": 2,
+   "total": 42.5
+  },
+  "Abril": {
+   "foh": 25.3,
+   "boh": 25.4,
+   "ref": 2,
+   "total": 52.7
+  },
+  "Maio": {
+   "foh": 30.2,
+   "boh": 29.1,
+   "ref": 2,
+   "total": 61.3
+  },
+  "Junho": {
+   "foh": 41.0,
+   "boh": 38.0,
+   "ref": 2,
+   "total": 81.0
+  },
+  "Julho": {
+   "foh": 53.0,
+   "boh": 54.0,
+   "ref": 2,
+   "total": 109.0
+  },
+  "Agosto": {
+   "foh": 62.0,
+   "boh": 55.0,
+   "ref": 2,
+   "total": 119.0
+  },
+  "Setembro": {
+   "foh": 39.4,
+   "boh": 38.6,
+   "ref": 2,
+   "total": 80.0
+  },
+  "Outubro": {
+   "foh": 32.6,
+   "boh": 29.1,
+   "ref": 2,
+   "total": 63.7
+  },
+  "Novembro": {
+   "foh": 21.0,
+   "boh": 21.0,
+   "ref": 2,
+   "total": 44.0
+  },
+  "Dezembro": {
+   "foh": 19.0,
+   "boh": 19.0,
+   "ref": 2,
+   "total": 40.0
+  }
+ },
+ "hc_mensal_fonte": "Simulador Headcount F&B Outlets (BASE/budget) — FOH+BOH+Ref"
+}
